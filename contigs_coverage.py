@@ -21,7 +21,7 @@ def contigs_cover_spades(file_name_or_path):
     name or its path as an argument. 
     creates two plots:
     1. distribution of GC content in contigs
-    2. plots GC content vs log2 coverage depth """
+    2. GC content vs log2 coverage depth """
     
     container = []
     
