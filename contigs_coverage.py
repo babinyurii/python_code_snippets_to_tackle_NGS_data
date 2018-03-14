@@ -36,25 +36,29 @@ def contigs_cover_spades(file_name_or_path):
     gc = [x[1] for x in container]
     
     # fig1 = plt.figure()
-    fig1 = sns.distplot(gc, hist=False, kde_kws={"shade":True})
-    fig1.set_title("GC distribution")
+    sns_dist = sns.distplot(gc, hist=False, 
+                            kde_kws={"shade":True})
+    sns_dist.set_title("GC_distribution")
+    sns_dist.set_xlabel("GC content, %")
+    fig = sns_dist.get_figure()
+    fig.savefig("contigs_GC_distribution", format="jpeg")
     
     
     reg = re.compile(r'cov_(.*)')
     coverage = []
     for el in container:
-        cov_raw = reg.search(el[0])
+        cov_raw = reg.search(el[0]) 
         cov = cov_raw.group()
         cov = cov[4:]
         coverage.append(float(cov))
     
     cov_log2 = [log2(x) for x in coverage]
-    fig2 = plt.figure()
+    fig1 = plt.figure()
     plt.scatter(gc, cov_log2, s=5)
-    plt.xlabel("GC content")
+    plt.xlabel("GC content, %")
     plt.ylabel("log2 coverage depth")
     plt.title("contigs' coverage by reads")
-    plt.savefig("contigs_coverage_depth", format="jpeg")
+    plt.savefig("GC_content_vs_contigs_coverage", format="jpeg")
 
 
 # function call
