@@ -1,2 +1,1 @@
-# scripts_to_tackle_NGS_data
-python functions to deal with NGS data
+python functions to deal with sequence data
