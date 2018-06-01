@@ -193,15 +193,7 @@ def prefetch_run(path_to_prefetch, sra_ids):
     
     with open(sra_ids) as f_obj:
         for line in f_obj:
-            print(line)
-            counter = 0
-            for ch in line.strip():
-                print(counter, ch)
-                counter += 1
             line = line.strip()
-            for ch in line.strip():
-                print(counter, ch)
-                counter += 1
             prefetch_inst = subprocess.Popen(["/home/yuriy/tools/sratoolkit.2.9.0-centos_linux64/bin/prefetch", line],
                                             stderr=subprocess.PIPE)
             
