@@ -7,6 +7,7 @@ Created on Wed May 30 15:13:31 2018
 """
 
 from Bio import SeqIO
+form Bio import AlignIO
 from Bio.SeqUtils import GC
 import subprocess
 import matplotlib.pyplot as plt
@@ -40,8 +41,10 @@ def locate_gaps(path_to, gaps=4, exact=True):
     
     path_to file
     gaps - optional number of gaps to find
+    exact - find columns with exact number of gaps, 
+    if False, returns interval between 1 and gaps
     
-    now reads only fasta
+    note: now reads only fasta
     """
     
     alignment = AlignIO.read(path_to, "fasta")
