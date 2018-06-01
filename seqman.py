@@ -33,6 +33,43 @@ def cat_contigs(path_to, seq_id="long_seq", out_f ="long_seq.fasta"):
     SeqIO.write(cat_seq, out_f, "fasta")
 
 
+
+def locate_gaps(path_to, gaps=4, exact=True):
+    """return the position and column in an alignment
+    with the give number of gaps and less 
+    
+    path_to file
+    gaps - optional number of gaps to find
+    
+    now reads only fasta
+    """
+    
+    alignment = AlignIO.read(path_to, "fasta")
+    num_cols = len(alignment[0])
+    container = []
+    
+
+    if exact:
+        for i in range(num_cols):
+            col = alignment[ : , i]
+            num_gaps = col.count("-")
+            if num_gaps == gaps:
+                container.append((i + 1, col))
+    
+    else:  
+        for i in range(num_cols):
+            col = alignment[ : , i]
+            num_gaps = col.count("-")
+            if 1 <= num_gaps <= gaps:
+                container.append((i + 1, col))
+     
+    
+    return container
+
+
+
+
+
 def bowtie2_run(bowtie_build, ref_seq, prefix, bowtie_align, mapping_name, 
                 fastq_file, output, summary):
     """runs bowtie2
