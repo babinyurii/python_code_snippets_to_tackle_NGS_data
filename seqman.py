@@ -7,7 +7,7 @@ Created on Wed May 30 15:13:31 2018
 """
 
 from Bio import SeqIO
-form Bio import AlignIO
+from Bio import AlignIO
 from Bio.SeqUtils import GC
 import subprocess
 import matplotlib.pyplot as plt
@@ -41,10 +41,8 @@ def locate_gaps(path_to, gaps=4, exact=True):
     
     path_to file
     gaps - optional number of gaps to find
-    exact - find columns with exact number of gaps, 
-    if False, returns interval between 1 and gaps
     
-    note: now reads only fasta
+    now reads only fasta
     """
     
     alignment = AlignIO.read(path_to, "fasta")
@@ -71,40 +69,31 @@ def locate_gaps(path_to, gaps=4, exact=True):
 
 
 
-
-
-def bowtie2_run(bowtie_build, ref_seq, prefix, bowtie_align, mapping_name, 
-                fastq_file, output, summary):
-    """runs bowtie2
+def locate_ambig(path_to):
+    """return the position and column containing 
+    ambiguous basesin
     
-    args: 
-    path to bowtie_build.py
-    path to reference seq (fasta)
-    path to and prefix file name (only id letters)
-    name of the run (for log)
-    input fastq file
-    output .sam file name
-    path and name.txt for summary
+    args:
+    path to fasta alignment
     """
+
+    ambig_dna = ["Y", "R", "W", "S", "K", "M", "D", "V", "H", "B", "X", "N"]
     
-    build_args = [bowtie_build, ref_seq, prefix]
+    alignment = AlignIO.read(path_to, "fasta")
+    num_cols = len(alignment[0])
+    container = []
     
-    build_inst = subprocess.Popen(build_args, stderr=subprocess.PIPE)
-    for line in build_inst.stderr:
-        print(line)
-        
-        
-    align_args = [bowtie_align, "-x", prefix, "-U", fastq_file, "-S", output]
     
-    align_inst = subprocess.Popen(align_args, stderr=subprocess.PIPE)
+    for i in range(num_cols):
+        col = alignment[ : , i]
+        for nuc in ambig_dna:
+            if nuc in col:
+                container.append((i + 1, col))
+                break
     
-    with open(summary, "a") as f_obj:
-        f_obj.write(mapping_name + "\n")
-        for line in align_inst.stderr:
-            f_obj.write(str(line) + "\n")
-        f_obj.write("***********end of run************")
-        
-        
+    return container
+    
+ 
 def filter_gc_depth(input_file, gc_low, gc_high, cov_low, cov_high):
     """filtering contigs by GC content and coverage depth
     creates fasta file containing resulted contigs. 
@@ -130,9 +119,7 @@ def filter_gc_depth(input_file, gc_low, gc_high, cov_low, cov_high):
         
     SeqIO.write(fraction, "fraction.fasta", "fasta")
     
-  
-
-
+    
 def contigs_cover_spades(path_to_file):
     """takes fasta file (spades tool output) 
     name or its path as an argument. 
@@ -176,9 +163,41 @@ def contigs_cover_spades(path_to_file):
     plt.ylabel("log2 coverage depth")
     plt.title("contigs' coverage by reads")
     plt.savefig("GC_content_vs_contigs_coverage", format="jpeg")
-     
         
 
+
+def bowtie2_run(bowtie_build, ref_seq, prefix, bowtie_align, mapping_name, 
+                fastq_file, output, summary):
+    """runs bowtie2
+    
+    args: 
+    path to bowtie_build.py
+    path to reference seq (fasta)
+    path to and prefix file name (only id letters)
+    name of the run (for log)
+    input fastq file
+    output .sam file name
+    path and name.txt for summary
+    """
+    
+    build_args = [bowtie_build, ref_seq, prefix]
+    
+    build_inst = subprocess.Popen(build_args, stderr=subprocess.PIPE)
+    for line in build_inst.stderr:
+        print(line)
+        
+        
+    align_args = [bowtie_align, "-x", prefix, "-U", fastq_file, "-S", output]
+    
+    align_inst = subprocess.Popen(align_args, stderr=subprocess.PIPE)
+    
+    with open(summary, "a") as f_obj:
+        f_obj.write(mapping_name + "\n")
+        for line in align_inst.stderr:
+            f_obj.write(str(line) + "\n")
+        f_obj.write("***********end of run************")
+        
+        
 
 def fastqc_run(path_to_fastqc, path_to_file, file_log=False):
     """runs fastqc  
@@ -222,12 +241,12 @@ def fastqc_run(path_to_fastqc, path_to_file, file_log=False):
                     print(line)
 
 
-def prefetch_run(path_to_prefetch, sra_ids):
+
+def prefetch_run(sra_ids):
     """
     launch prefetch utility
     
     args:
-    path to prefetch util
     path to sra ids in the txt file
     """
     
@@ -244,18 +263,20 @@ def prefetch_run(path_to_prefetch, sra_ids):
             
 
 
-def fastq_dump_run(path_to_sra, out_dir=False):
+def fastq_dump_run(path_to, out_dir=False):
     """
     run fastq-dump utility
-    
+    path to the utility itself is in fastq_dump_inst, 
+    change path if needed    
+
     args:
-    path to sra util
+    path to file with accessions
     path to output folder
     """
     
     if out_dir:
         
-        with open(path_to_sra) as f_obj:
+        with open(path_to) as f_obj:
             for line in f_obj:
                 line = line.strip()
                 fastq_dump_inst = subprocess.Popen(["/home/yuriy/tools/sratoolkit.2.9.0-centos_linux64/bin/fastq-dump",
