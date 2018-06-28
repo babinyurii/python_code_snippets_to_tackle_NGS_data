@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import re
 from math import log2
+from operator import itemgetter
 sns.set()
 
 
@@ -165,6 +166,41 @@ def contigs_cover_spades(path_to_file):
     plt.savefig("GC_content_vs_contigs_coverage", format="jpeg")
         
 
+
+def coverage_count(ugene_cov):
+    """
+    
+    takes ugene export with the following parameters:
+    format: per base (it derives .txt file, separator is tab)
+    export bases quantity 'yes'
+    ----
+    sorts bases count at each position
+    useful to verify ambigous nucleotides
+    writes the result into a .csv in the current location
+    """
+    
+    cov = pd.read_csv(ugene_cov, sep="\t")
+    cov.index = cov.position
+    #cov.drop(["position"], axis=1, inplace=True)
+    
+    nucleotides = cov.columns.tolist()[-4:]
+    container = []
+
+    for ind in cov.index:
+        nucl_count = cov.loc[ind, "A" : "T"].tolist()
+        count_at_pos = list(zip(nucleotides, nucl_count))
+        count_at_pos.sort(key=itemgetter(1), reverse=True)
+        # creating more nicely looking thing for resulted series obj:
+        
+        s = ""
+        for el in count_at_pos:
+            s += el[0] + ": " + str(el[1]) + ",     "
+            
+        container.append(s)
+    
+    cov["coverage_count"] = container  
+    cov.to_csv("coverage_depth_count.csv")
+    
 
 def bowtie2_run(bowtie_build, ref_seq, prefix, bowtie_align, mapping_name, 
                 fastq_file, output, summary):
