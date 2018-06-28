@@ -35,6 +35,18 @@ def cat_contigs(path_to, seq_id="long_seq", out_f ="long_seq.fasta"):
     SeqIO.write(cat_seq, out_f, "fasta")
 
 
+def split_fasta(path_to_file):
+    """
+    
+    splits multifasta and writes resulting sequences 
+    into several fasta files
+    saves the results in the dir of the original multifasta file 
+    """
+    path = path_to_file.rsplit("\\", 1)[0]
+    for record in SeqIO.parse(path_to_file, "fasta"):        
+        SeqIO.write(record, path + "\\"  + record.id + ".fasta", "fasta")
+
+
 
 def locate_gaps(path_to, gaps=4, exact=True):
     """return the position and column in an alignment
