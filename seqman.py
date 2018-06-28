@@ -47,7 +47,24 @@ def split_fasta(path_to_file):
         SeqIO.write(record, path + "\\"  + record.id + ".fasta", "fasta")
 
 
-
+def merge_fasta(folder_path):
+    """
+    merges several fasta with single record in each
+    into a multifasta
+    takes path to folder as an argument
+    all the .fasta in this folder will be merged
+    if there's multirecord file, throws: 
+    "ValueError: More than one record found in handle"
+    """
+    
+    fastas = glob.glob(folder_path + "*.fasta")
+    with open(folder_path + "merged_multifasta.fasta", "a") as f_obj:
+        for el in fastas:
+            rec = SeqIO.read(el, "fasta")
+            SeqIO.write(rec, f_obj, "fasta")
+    
+   
+    
 def locate_gaps(path_to, gaps=4, exact=True):
     """return the position and column in an alignment
     with the give number of gaps and less 
