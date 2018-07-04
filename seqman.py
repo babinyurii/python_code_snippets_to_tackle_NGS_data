@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed May 30 15:13:31 2018
-
 @author: yuriy
 """
 
 from Bio import SeqIO
 from Bio import AlignIO
 from Bio.SeqUtils import GC
+import glob
 import subprocess
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 import re
 from math import log2
@@ -99,28 +99,39 @@ def locate_gaps(path_to, gaps=4, exact=True):
     return container
 
 
-
-def locate_ambig(path_to):
+def locate_ambig(path_to, line=False):
     """return the position and column containing 
-    ambiguous basesin
+    ambiguous bases in list of tuples
     
     args:
-    path to fasta alignment
+    path to fasta alignment, 
+    'if line=int', find ambiguous nucleotides 
+    at a certain seq in an alignment
+    'if line=False, finds all the ambiguous nucs
+    
     """
-
     ambig_dna = ["Y", "R", "W", "S", "K", "M", "D", "V", "H", "B", "X", "N"]
-    
     alignment = AlignIO.read(path_to, "fasta")
-    num_cols = len(alignment[0])
     container = []
+
+    if line:
+        num_cols = len(alignment[0])    
     
+        for i in range(num_cols):
+            col = alignment[line, i]
+            for nuc in ambig_dna:
+                if nuc in col:
+                    container.append((i + 1, col))
+                    break
+    else:
+        num_cols = len(alignment[0])
     
-    for i in range(num_cols):
-        col = alignment[ : , i]
-        for nuc in ambig_dna:
-            if nuc in col:
-                container.append((i + 1, col))
-                break
+        for i in range(num_cols):
+            col = alignment[ : , i]
+            for nuc in ambig_dna:
+                if nuc in col:
+                    container.append((i + 1, col))
+                    break
     
     return container
     
@@ -199,14 +210,16 @@ def contigs_cover_spades(path_to_file):
 
 def coverage_count(ugene_cov):
     """
-    
     takes ugene export with the following parameters:
-    format: per base (it derives .txt file, separator is tab)
-    export bases quantity 'yes'
+    format: 
+        - per base (it derives .txt file, separator is tab)
+        - export bases quantity 'yes'
     ----
     sorts bases count at each position
     useful to verify ambigous nucleotides
-    writes the result into a .csv in the current location
+    writes the result into a .csv in the current location, 
+    named 'coverage_depth_count.csv"
+    returns no container
     """
     
     cov = pd.read_csv(ugene_cov, sep="\t")
