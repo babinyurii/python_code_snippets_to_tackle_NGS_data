@@ -18,6 +18,18 @@ from math import log2
 from operator import itemgetter
 sns.set()
 
+def genseq(seq_len):
+    """
+    the most simplest 
+    random sequence generator
+    seq_len parameter is a desired
+    sequence length
+    """
+    nucs = ["A", "T", "G", "C"]
+    seq = ""
+    for i in range(0, seq_len):
+        seq += nucs[randint(0,3)]
+    return seq
 
 
 def cat_contigs(path_to, seq_id="long_seq", out_f ="long_seq.fasta"):
@@ -38,7 +50,6 @@ def cat_contigs(path_to, seq_id="long_seq", out_f ="long_seq.fasta"):
 
 def split_fasta(path_to_file):
     """
-    
     splits multifasta and writes resulting sequences 
     into several fasta files
     saves the results in the dir of the original multifasta file 
@@ -100,7 +111,8 @@ def locate_gaps(path_to, gaps=4, exact=True):
 
 
 def locate_ambig(path_to, line=False):
-    """return the position and column containing 
+    """
+    return the position and column containing 
     ambiguous bases in list of tuples
     
     args:
@@ -108,7 +120,6 @@ def locate_ambig(path_to, line=False):
     'if line=int', find ambiguous nucleotides 
     at a certain seq in an alignment
     'if line=False, finds all the ambiguous nucs
-    
     """
     ambig_dna = ["Y", "R", "W", "S", "K", "M", "D", "V", "H", "B", "X", "N"]
     alignment = AlignIO.read(path_to, "fasta")
@@ -247,7 +258,8 @@ def coverage_count(ugene_cov):
 
 def bowtie2_run(bowtie_build, ref_seq, prefix, bowtie_align, mapping_name, 
                 fastq_file, output, summary):
-    """runs bowtie2
+    """
+    runs bowtie2
     
     args: 
     path to bowtie_build.py
@@ -279,7 +291,8 @@ def bowtie2_run(bowtie_build, ref_seq, prefix, bowtie_align, mapping_name,
         
 
 def fastqc_run(path_to_fastqc, path_to_file, file_log=False):
-    """runs fastqc  
+    """
+    runs fastqc  
     
     'path_to_fastqc' arg should be a file 
     name, path, or a list of names/paths 
