@@ -16,6 +16,7 @@ import seaborn as sns
 import re
 from math import log2
 from operator import itemgetter
+from random import randint
 sns.set()
 
 def genseq(seq_len):
