@@ -7,6 +7,7 @@ Created on Wed May 30 15:13:31 2018
 
 from Bio import SeqIO
 from Bio import AlignIO
+from Bio import Entrez
 from Bio.SeqUtils import GC
 import glob
 import subprocess
@@ -17,7 +18,39 @@ import re
 from math import log2
 from operator import itemgetter
 from random import randint
+from time import sleep
 sns.set()
+
+
+def fetch_by_id(ids):
+    """
+    downloads sequences from nucleotide database
+    by id nums
+    creates 2 files: .gb and .fasta
+    ids - list of ids to download
+    returns no value
+    """
+    Entrez.email = "babin.yurii@gmail.com"
+    
+    with open("test_fetch_by_id.gb" , "a") as f_obj:
+        for i in ids: 
+            sleep(0.35)
+            handle = Entrez.efetch(db="nucleotide", id=i, rettype="gb", retmode="text")
+            fetched = handle.read()
+            f_obj.write(fetched)
+    
+    count = 0
+    with open("test_fetch_by_id.gb", "r") as input_handle:
+        with open("test_fetch_by_id.fasta", "a") as output_handle:
+            seqs = SeqIO.parse(input_handle, "genbank")
+            for seq in seqs:
+                SeqIO.write(seq, output_handle, "fasta")
+                count += 1
+    print("a total of %s sequences were downloaded" %count)
+         
+    
+    
+
 
 def genseq(seq_len):
     """
