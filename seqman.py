@@ -22,6 +22,28 @@ from time import sleep
 sns.set()
 
 
+def fasta_info(path_to):
+    """
+    returns information about fasta file
+    ids and length of sequences
+    ----------
+    note: 
+    if fasta in the current location, use .\file.fasta
+    or ./file.fasta as path_to arg
+    ----------
+    """
+    container = []
+    records = SeqIO.parse(path_to, "fasta")
+    
+    for rec in records:
+        container.append((rec.id, len(rec.seq)))
+    print("no", "id", "length")
+    print("------------------")
+    for counter, value in enumerate(container, 1):
+        print(counter, value[0], value[1])
+    #return container
+
+
 def fetch_by_id(ids):
     """
     downloads sequences from nucleotide database
@@ -32,16 +54,16 @@ def fetch_by_id(ids):
     """
     Entrez.email = "babin.yurii@gmail.com"
     
-    with open("test_fetch_by_id.gb" , "a") as f_obj:
+    with open("downloaded_seq.gb" , "w") as f_obj:
         for i in ids: 
-            sleep(0.35)
+            sleep(0.5)
             handle = Entrez.efetch(db="nucleotide", id=i, rettype="gb", retmode="text")
             fetched = handle.read()
             f_obj.write(fetched)
     
     count = 0
-    with open("test_fetch_by_id.gb", "r") as input_handle:
-        with open("test_fetch_by_id.fasta", "a") as output_handle:
+    with open("downloaded_seq.gb", "r") as input_handle:
+        with open("downloaded_seq.fasta", "w") as output_handle:
             seqs = SeqIO.parse(input_handle, "genbank")
             for seq in seqs:
                 SeqIO.write(seq, output_handle, "fasta")
@@ -49,9 +71,6 @@ def fetch_by_id(ids):
     print("a total of %s sequences were downloaded" %count)
          
     
-    
-
-
 def genseq(seq_len):
     """
     the most simplest 
@@ -84,9 +103,13 @@ def cat_contigs(path_to, seq_id="long_seq", out_f ="long_seq.fasta"):
 
 def split_fasta(path_to_file):
     """
-    splits multifasta and writes resulting sequences 
-    into several fasta files
-    saves the results in the dir of the original multifasta file 
+    splits multifasta into several fastas
+    saves the results in the original fasta dir 
+    ----------
+    note: 
+    if multifasta in the current location, use .\multifasta.fasta
+    or ./multifasta.fasta as path_to_file arg
+    ----------
     """
     path = path_to_file.rsplit("\\", 1)[0]
     for record in SeqIO.parse(path_to_file, "fasta"):        
@@ -95,19 +118,25 @@ def split_fasta(path_to_file):
 
 def merge_fasta(folder_path):
     """
-    merges several fasta with single record in each
-    into a multifasta
-    takes path to folder as an argument
-    all the .fasta in this folder will be merged
-    if there's multirecord file, throws: 
-    "ValueError: More than one record found in handle"
-    """
-    
+    merges fastas with single or multi records
+    into a multifasta file
+    takes path to folder as an arg
+    -------
+    note: if fastas are in the current location,
+    use ".\\" or "./" as folder_path arg
+    -------
+    """  
     fastas = glob.glob(folder_path + "*.fasta")
-    with open(folder_path + "merged_multifasta.fasta", "a") as f_obj:
+    with open(folder_path + "merged_multifasta.fasta", "w") as f_obj:
         for el in fastas:
-            rec = SeqIO.read(el, "fasta")
-            SeqIO.write(rec, f_obj, "fasta")
+            try:
+                rec = SeqIO.read(el, "fasta")
+                SeqIO.write(rec, f_obj, "fasta")
+            except ValueError as e:
+                print("in the %s file more than one record exist" %el)
+                multi_recs = SeqIO.parse(el, "fasta")
+                for r in multi_recs:
+                    SeqIO.write(r, f_obj, "fasta")
     
    
     
@@ -290,6 +319,16 @@ def coverage_count(ugene_cov):
     cov.to_csv("coverage_depth_count.csv")
     
 
+
+
+
+
+
+###########################################################################
+# all the function with _run suffix are the patterns for the wrappers 
+# used on the same machine, where you have only to run the function from 
+# any script. so, paths to the tools, out and in folders must be
+# specified.
 def bowtie2_run(bowtie_build, ref_seq, prefix, bowtie_align, mapping_name, 
                 fastq_file, output, summary):
     """
