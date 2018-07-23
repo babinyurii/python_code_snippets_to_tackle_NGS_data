@@ -1,1 +1,1 @@
-python functions to deal with sequence data
+seqman.py contains function which may be useful when dealing with sequence data
