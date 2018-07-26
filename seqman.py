@@ -8,9 +8,10 @@ Created on Wed May 30 15:13:31 2018
 from Bio import SeqIO
 from Bio import AlignIO
 from Bio import Entrez
+from Bio.Blast import NCBIWWW
+from Bio.Blast import NCBIXML
 from Bio.SeqUtils import GC
 import glob
-import subprocess
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -18,8 +19,40 @@ import re
 from math import log2
 from operator import itemgetter
 from random import randint
-from time import sleep
+from time import sleep, time
 sns.set()
+
+
+def blast_fasta(path_to, e_thresh=0.1, hits_to_return=10):
+    """
+    takes fasta file and blasts all the record found in it
+    writes results into the txt file
+    args:
+    path_to - path to fasta file
+    e_thresh - e-value cut off
+    hits_to_return - a number of hits returned
+    """
+    
+    fasta_to_blast = SeqIO.parse(path_to, "fasta")
+    
+    with open("test_blast_results.txt", "w") as f_obj:
+        start = time()
+        for rec in fasta_to_blast:
+            f_obj.write("\nQUERY: " + rec.id + "\n")
+        
+            result_handle = NCBIWWW.qblast("blastn", "nt", rec.seq, hitlist_size=hits_to_return) 
+            blast_record = NCBIXML.read(result_handle)
+        
+            for alignt in  blast_record.alignments:
+                for hsp in alignt.hsps:
+                    if hsp.expect < e_thresh:
+                        f_obj.write("---------hit--------\n")
+                        f_obj.write("sequence: " + alignt.title + "\n")
+                        f_obj.write("length: " + str(alignt.length) + "\n")
+                        f_obj.write("e value: " + str(hsp.expect) + "\n")
+               
+            end = time()
+            print(rec.id + " blast query was finished in: " + str(round((end - start), 2)) + " sec")
 
 
 def fasta_info(path_to):
@@ -323,149 +356,5 @@ def coverage_count(ugene_cov):
 
 
 
-
-###########################################################################
-# all the function with _run suffix are the patterns for the wrappers 
-# used on the same machine, where you have only to run the function from 
-# any script. so, paths to the tools, out and in folders must be
-# specified.
-def bowtie2_run(bowtie_build, ref_seq, prefix, bowtie_align, mapping_name, 
-                fastq_file, output, summary):
-    """
-    runs bowtie2
-    
-    args: 
-    path to bowtie_build.py
-    path to reference seq (fasta)
-    path to and prefix file name (only id letters)
-    name of the run (for log)
-    input fastq file
-    output .sam file name
-    path and name.txt for summary
-    """
-    
-    build_args = [bowtie_build, ref_seq, prefix]
-    
-    build_inst = subprocess.Popen(build_args, stderr=subprocess.PIPE)
-    for line in build_inst.stderr:
-        print(line)
-        
-        
-    align_args = [bowtie_align, "-x", prefix, "-U", fastq_file, "-S", output]
-    
-    align_inst = subprocess.Popen(align_args, stderr=subprocess.PIPE)
-    
-    with open(summary, "a") as f_obj:
-        f_obj.write(mapping_name + "\n")
-        for line in align_inst.stderr:
-            f_obj.write(str(line) + "\n")
-        f_obj.write("***********end of run************")
-        
-        
-
-def fastqc_run(path_to_fastqc, path_to_file, file_log=False):
-    """
-    runs fastqc  
-    
-    'path_to_fastqc' arg should be a file 
-    name, path, or a list of names/paths 
-    'path_to_file' is path to fastq file
-    if file_log=True, stderr of fastqc
-    will be written into a file
-    """
-    
-    if type(path_to_file) == list:
-        for name_path in path_to_file:
-            fastqc_inst = subprocess.Popen([path_to_fastqc, name_path], 
-                                           stderr=subprocess.PIPE)
-            
-            if file_log:
-                with open("fastqc_log.txt", "a") as f_obj:
-                    for line in fastqc_inst.stderr:
-                         f_obj.write(str(line) + "\n")
-                    f_obj.write("***************\n")
-            
-            else:
-                for line in fastqc_inst.stderr:
-                    print(line)
-                
-    else:
-        fastqc_inst = subprocess.Popen([path_to_fastqc, path_to_file], 
-                                       stderr=subprocess.PIPE)
-        
-        
-        # fastqc_inst.kill() # to kill the process
-        
-        if file_log:
-            with open("fastqc_log.txt", "a") as f_obj:
-                for line in fastqc_inst.stderr:
-                    f_obj.write(str(line) + "\n")
-                f_obj.write("***************\n")
-        else:
-             for line in fastqc_inst.stderr:
-                    print(line)
-
-
-
-def prefetch_run(sra_ids):
-    """
-    launch prefetch utility
-    
-    args:
-    path to sra ids in the txt file
-    """
-    
-    with open(sra_ids) as f_obj:
-        for line in f_obj:
-            line = line.strip()
-            prefetch_inst = subprocess.Popen(["/home/yuriy/tools/sratoolkit.2.9.0-centos_linux64/bin/prefetch", line],
-                                            stderr=subprocess.PIPE)
-            
-            for line in prefetch_inst.stderr:
-                print(line)
-                print("**********************")
-            
-            
-
-
-def fastq_dump_run(path_to, out_dir=False):
-    """
-    run fastq-dump utility
-    path to the utility itself is in fastq_dump_inst, 
-    change path if needed    
-
-    args:
-    path to file with accessions
-    path to output folder
-    """
-    
-    if out_dir:
-        
-        with open(path_to) as f_obj:
-            for line in f_obj:
-                line = line.strip()
-                fastq_dump_inst = subprocess.Popen(["/home/yuriy/tools/sratoolkit.2.9.0-centos_linux64/bin/fastq-dump",
-                                                    "--outdir",
-                                                    out_dir,
-                                                    "--split-files",
-                                                    line],
-                                                    stderr=subprocess.PIPE)
-                for line in fastq_dump_inst.stderr:
-                    print(line)
-    
-    
-    else:
-        with open(path_to_sra) as f_obj:
-            for line in f_obj:
-                fastq_dump_inst = subprocess.Popen(["/home/yuriy/tools/sratoolkit.2.9.0-centos_linux64/bin/fastq-dump",
-                                                    "--split-files",
-                                                    line],
-                                                    stderr=subprocess.PIPE)
-                for line in fastq_dump_inst.stderr:
-                    print(line)
-                
-         
-        
-        
         
         
