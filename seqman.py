@@ -23,7 +23,7 @@ from time import sleep, time
 sns.set()
 
 
-def blast_fasta(path_to, e_thresh=0.1, hits_to_return=10):
+def blast_fasta(path_to, e_thresh=0.1, hits_to_return=10):  
     """
     takes fasta file and blasts all the record found in it
     writes results into the txt file
@@ -32,15 +32,14 @@ def blast_fasta(path_to, e_thresh=0.1, hits_to_return=10):
     e_thresh - e-value cut off
     hits_to_return - a number of hits returned
     """
-    
     fasta_to_blast = SeqIO.parse(path_to, "fasta")
     
-    with open("test_blast_results.txt", "w") as f_obj:
+    with open("blast_results_seqman.txt", "w") as f_obj:
         start = time()
         for rec in fasta_to_blast:
             f_obj.write("\nQUERY: " + rec.id + "\n")
         
-            result_handle = NCBIWWW.qblast("blastn", "nt", rec.seq, hitlist_size=hits_to_return) 
+            result_handle = NCBIWWW.qblast("blastn", "nt",  rec.seq, hitlist_size=hits_to_return)
             blast_record = NCBIXML.read(result_handle)
         
             for alignt in  blast_record.alignments:
@@ -52,9 +51,9 @@ def blast_fasta(path_to, e_thresh=0.1, hits_to_return=10):
                         f_obj.write("e value: " + str(hsp.expect) + "\n")
                
             end = time()
-            print(rec.id + " blast query was finished in: " + str(round((end - start), 2)) + " sec")
-
-
+            print(rec.id + " blast query was finished in {0} minutes {1} seconds".format((end - start) // 60, int((end - start) % 60)))
+            
+            
 def fasta_info(path_to):
     """
     returns information about fasta file
