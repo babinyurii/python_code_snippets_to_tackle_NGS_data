@@ -21,6 +21,7 @@ from operator import itemgetter
 from random import randint
 from time import sleep, time
 sns.set()
+from httplib import HTTPException
 
 
 def blast_fasta(path_to, e_thresh=0.1, hits_to_return=10):  
@@ -29,29 +30,47 @@ def blast_fasta(path_to, e_thresh=0.1, hits_to_return=10):
     writes results into the txt file
     args:
     path_to - path to fasta file
-    e_thresh - e-value cut off
-    hits_to_return - a number of hits returned
+    e_thresh - e-value cut off, 0.1 by default
+    hits_to_return - a number of hits returned, 10 by default
     """
     fasta_to_blast = SeqIO.parse(path_to, "fasta")
     
+
     with open("blast_results_seqman.txt", "w") as f_obj:
         start = time()
         for rec in fasta_to_blast:
             f_obj.write("\nQUERY: " + rec.id + "\n")
-        
-            result_handle = NCBIWWW.qblast("blastn", "nt",  rec.seq, hitlist_size=hits_to_return)
-            blast_record = NCBIXML.read(result_handle)
-        
-            for alignt in  blast_record.alignments:
-                for hsp in alignt.hsps:
-                    if hsp.expect < e_thresh:
-                        f_obj.write("---------hit--------\n")
-                        f_obj.write("sequence: " + alignt.title + "\n")
-                        f_obj.write("length: " + str(alignt.length) + "\n")
-                        f_obj.write("e value: " + str(hsp.expect) + "\n")
-               
-            end = time()
-            print(rec.id + " blast query was finished in {0} minutes {1} seconds".format((end - start) // 60, int((end - start) % 60)))
+            
+            try:
+                result_handle = NCBIWWW.qblast("blastn", "nt",  rec.seq, hitlist_size=hits_to_return)
+                blast_record = NCBIXML.read(result_handle)
+                for alignt in  blast_record.alignments:
+                    for hsp in alignt.hsps:
+                        if hsp.expect < e_thresh:
+                            f_obj.write("---------hit--------\n")
+                            f_obj.write("sequence: " + alignt.title + "\n")
+                            f_obj.write("length: " + str(alignt.length) + "\n")
+                            f_obj.write("e value: " + str(hsp.expect) + "\n")
+                   
+                end = time()
+                print(rec.id + " blast query was finished in {0} minutes {1} seconds".format((end - start) // 60, int((end - start) % 60)))
+            
+            except HTTPException as e:
+                print("Network problem: ", e)
+                print("Second and final attempt is under way...")
+                result_handle = NCBIWWW.qblast("blastn", "nt",  rec.seq, hitlist_size=hits_to_return)
+                blast_record = NCBIXML.read(result_handle)
+                for alignt in  blast_record.alignments:
+                    for hsp in alignt.hsps:
+                        if hsp.expect < e_thresh:
+                            f_obj.write("---------hit--------\n")
+                            f_obj.write("sequence: " + alignt.title + "\n")
+                            f_obj.write("length: " + str(alignt.length) + "\n")
+                            f_obj.write("e value: " + str(hsp.expect) + "\n")
+                   
+                end = time()
+                print(rec.id + " blast query was finished in {0} minutes {1} seconds".format((end - start) // 60, int((end - start) % 60)))
+            
             
             
 def fasta_info(path_to):
@@ -66,13 +85,15 @@ def fasta_info(path_to):
     """
     container = []
     records = SeqIO.parse(path_to, "fasta")
-    
+    counter = 0
     for rec in records:
-        container.append((rec.id, len(rec.seq)))
-    print("no", "id", "length")
+        container.append((rec.id, len(rec.seq), GC(rec.seq)))
+        counter += 1
+    print("file contains " + str(counter) + " sequences")
+    print("no", "id", "length", "GC%", sep="\t")
     print("------------------")
     for counter, value in enumerate(container, 1):
-        print(counter, value[0], value[1])
+        print(counter, value[0], value[1], value[2], sep="\t")
     #return container
 
 
