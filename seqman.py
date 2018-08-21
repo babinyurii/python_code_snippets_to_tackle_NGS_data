@@ -21,7 +21,7 @@ from operator import itemgetter
 from random import randint
 from time import sleep, time
 sns.set()
-from httplib import HTTPException
+
 
 
 def blast_fasta(path_to, e_thresh=0.1, hits_to_return=10):  
@@ -55,7 +55,7 @@ def blast_fasta(path_to, e_thresh=0.1, hits_to_return=10):
                 end = time()
                 print(rec.id + " blast query was finished in {0} minutes {1} seconds".format((end - start) // 60, int((end - start) % 60)))
             
-            except HTTPException as e:
+            except ValueError as e:
                 print("Network problem: ", e)
                 print("Second and final attempt is under way...")
                 result_handle = NCBIWWW.qblast("blastn", "nt",  rec.seq, hitlist_size=hits_to_return)
