@@ -24,7 +24,11 @@ sns.set()
 
 
 
-def blast_fasta(path_to, e_thresh=0.1, hits_to_return=10):  
+def blast_fasta(path_to, e_thresh=0.1, hits_to_return=10):
+    
+    from http.client import IncompleteRead
+    from socket import gaierror
+    from urllib.error import HTTPError
     """
     takes fasta file and blasts all the record found in it
     writes results into the txt file
@@ -55,9 +59,11 @@ def blast_fasta(path_to, e_thresh=0.1, hits_to_return=10):
                 end = time()
                 print(rec.id + " blast query was finished in {0} minutes {1} seconds".format((end - start) // 60, int((end - start) % 60)))
             
-            except ValueError as e:
+            #TODO: make log of the exceptions, to find out what kind of they are
+            except IncompleteRead as e: 
                 print("Network problem: ", e)
                 print("Second and final attempt is under way...")
+                
                 result_handle = NCBIWWW.qblast("blastn", "nt",  rec.seq, hitlist_size=hits_to_return)
                 blast_record = NCBIXML.read(result_handle)
                 for alignt in  blast_record.alignments:
@@ -67,9 +73,15 @@ def blast_fasta(path_to, e_thresh=0.1, hits_to_return=10):
                             f_obj.write("sequence: " + alignt.title + "\n")
                             f_obj.write("length: " + str(alignt.length) + "\n")
                             f_obj.write("e value: " + str(hsp.expect) + "\n")
+                        
                    
                 end = time()
                 print(rec.id + " blast query was finished in {0} minutes {1} seconds".format((end - start) // 60, int((end - start) % 60)))
+            
+            except gaierror as e:
+                print("some other problem, 'gaierror': ", e)
+            except HTTPError as e:
+                print("urllib.error.HTTPError: ", e)
             
             
             
@@ -270,6 +282,7 @@ def filter_gc_depth(input_file, gc_low, gc_high, cov_low, cov_high):
     
     input file is fasta
     gc and cov are integers
+    creates file 'fraction_gc_depth'
     """
     fraction = []
     gc = []
@@ -286,7 +299,7 @@ def filter_gc_depth(input_file, gc_low, gc_high, cov_low, cov_high):
         if gc_low <= gc <= gc_high and cov_low <= cov <= cov_high:
             fraction.append(seq_record)
         
-    SeqIO.write(fraction, "fraction.fasta", "fasta")
+    SeqIO.write(fraction, "fraction_gc_depth.fasta", "fasta")
     
     
 def contigs_cover_spades(path_to_file):
