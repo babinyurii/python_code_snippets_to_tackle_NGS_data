@@ -5,17 +5,14 @@ Created on Thu Mar 21 11:33:22 2019
 @author: babin
 """
 import os
+import datetime
 from Bio import SeqIO
 from Bio.SeqUtils import GC
 from Bio import Entrez
-import datetime
-import seaborn as sns
 from time import sleep, time
 sns.set()
 
 def _get_current_time():
-    """just returns time stamp
-    """
     time_stamp = datetime.datetime.fromtimestamp(
         time()).strftime('%Y-%m-%d %H:%M:%S')
     return time_stamp
@@ -70,16 +67,6 @@ def fetch_seq(ids, seq_format="fasta", sep=False):
 
 
 def _get_id_length_gc(file):
-    """calculates length and GC content of the sequences
-    Parameters
-    ----------
-    file : input fasta file
-    
-    Returns
-    ----------
-    num_records : number of sequences in the input fasta file
-    ids_len_and_gc : list of tuples, each tuple contains sequence id, length and GC content
-    """
     ids_len_and_gc = []
     records = SeqIO.parse(file, "fasta")
     num_records = 0
@@ -91,13 +78,6 @@ def _get_id_length_gc(file):
         
   
 def _show_fasta_info(file, num_records, ids_len_and_gc):
-    """prints out the result of fasta_info function
-    Parameters
-    ----------
-    file : input fasta file
-    num_records : number of sequences in the input file
-    ids_len_and_gc : list of tuples containing sequence id, length and GC content
-    """
     print("file '{0}' contains {1} sequences".format(file, num_records))
     print("", "sequence id", "length", "GC%", sep="\t")
     for counter, value in enumerate(ids_len_and_gc, 1):
