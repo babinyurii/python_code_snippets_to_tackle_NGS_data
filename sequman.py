@@ -10,14 +10,14 @@ from Bio import SeqIO
 from Bio.SeqUtils import GC
 from Bio import Entrez
 from time import sleep, time
-sns.set()
+
 
 def _get_current_time():
     time_stamp = datetime.datetime.fromtimestamp(
         time()).strftime('%Y-%m-%d %H:%M:%S')
     return time_stamp
 
-def _genbank_loader(f_obj, seq_id, rettype):
+def _load_from_genbank(f_obj, seq_id, rettype):
     handle = Entrez.efetch(db="nucleotide", id=seq_id, rettype=rettype, retmode="text")
     fetched = handle.read()
     f_obj.write(fetched)
@@ -40,13 +40,13 @@ def fetch_seq(ids, seq_format="fasta", sep=False):
     count = 0
     if type(ids) == str:
         with open("downloaded_" + ids + "." + seq_format, "w") as f_obj:
-            _genbank_loader(f_obj, ids, seq_format)
+            _load_from_genbank(f_obj, ids, seq_format)
             print("a sequence " + ids + " was downloaded")
     elif type(ids) == list:
         if sep:
             for i in ids: 
                 with open("downloaded_" + i + "." + seq_format, "w") as f_obj:
-                    _genbank_loader(f_obj, i, seq_format)
+                    _load_from_genbank(f_obj, i, seq_format)
                     count += 1
                     sleep(0.5)
             print("a total of %s sequences were downloaded" %count)
@@ -58,7 +58,7 @@ def fetch_seq(ids, seq_format="fasta", sep=False):
             time_stamp = days + "_time-" + day_time
             with open("downloaded_bunch_" + time_stamp + "." + seq_format, "w") as f_obj:
                 for i in ids:
-                    _genbank_loader(f_obj, i, seq_format)
+                    _load_from_genbank(f_obj, i, seq_format)
                     count += 1
                     sleep(0.5)
                 print("a total of %s sequences were downloaded" %count)
@@ -84,7 +84,8 @@ def _show_fasta_info(file, num_records, ids_len_and_gc):
         print(counter, value[0], value[1], round(value[2], 2), sep="\t")
         print("------------------------------------")
         
-def fasta_info(path_to_fasta=False):
+        
+def fasta_info(path_to=False):
     """prints out information about fasta files:
     number of sequences in the file, sequence id numbers,
     lengths of sequences and GC content
@@ -99,12 +100,12 @@ def fasta_info(path_to_fasta=False):
     """
     fasta_extensions = ["fa", "fas", "fasta"]
     
-    if type(path_to_fasta) == str:
-        num_records, len_and_gc = _get_id_length_gc(path_to_fasta)
-        _show_fasta_info(path_to_fasta, num_records, len_and_gc)
+    if type(path_to) == str:
+        num_records, len_and_gc = _get_id_length_gc(path_to)
+        _show_fasta_info(path_to, num_records, len_and_gc)
         
-    elif type(path_to_fasta) == list:
-        for path in path_to_fasta:
+    elif type(path_to) == list:
+        for path in path_to:
             num_records, len_and_gc = _get_id_length_gc(path)
             _show_fasta_info(path, num_records, len_and_gc)  
     else:
@@ -113,6 +114,29 @@ def fasta_info(path_to_fasta=False):
             if f.rsplit(".", 1)[-1] in fasta_extensions:
                 num_records, ids_len_and_gc = _get_id_length_gc(f)
                 _show_fasta_info(f, num_records, ids_len_and_gc)
+
+
+def split_fasta(path_to, path_out=False):
+    """splits fasta file containing several
+    sequences into the corresponding number of
+    fasta files. 
+    Parameters:
+    ----------
+    path to : str 
+        path to the input file
+    path_out : str
+        path to output dir
+    """
+    if path_out:
+        if not os.path.exists(path_out):
+            os.mkdir(path_out)
+        for record in SeqIO.parse(path_to, "fasta"):        
+            SeqIO.write(record, path_out + record.id + ".fasta", "fasta")
+        print("file {0} was splitted. the results are in the {1}".format(path_to, path_out))
+    else:
+        for record in SeqIO.parse(path_to, "fasta"):
+            SeqIO.write(record, record.id + ".fasta", "fasta")
+        print("file {0} was splitted. the results are in the {1}".format(path_to, os.getcwd()))
 
 
 
