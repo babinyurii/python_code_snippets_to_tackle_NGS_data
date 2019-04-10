@@ -7,6 +7,7 @@ Created on Thu Mar 21 11:33:22 2019
 import os
 import datetime
 from Bio import SeqIO
+from Bio.Seq import Seq
 from Bio.SeqUtils import GC
 from Bio import Entrez
 from time import sleep, time
@@ -139,8 +140,39 @@ def split_fasta(path_to, path_out=False):
         print("file {0} was splitted. the results are in the {1}".format(path_to, os.getcwd()))
 
 
+def _cat_fasta_records(file):
+    cat_seq = ""
+    for record in SeqIO.parse(file, "fasta"):
+        cat_seq += record
+    return cat_seq
 
 
+def cat_fasta(path_to, fas_name="cat_seq.fasta", fas_id="cat_seq", fas_descr=""):
+    """concatenates fasta sequences into one 
+    long sequence, takes one multifasta 
+    or several fasta files as an input
+    Parameters:
+    ----------
+    path_to : str or list
+        path to input file or files
+    fas_name : str, optional
+        name of the fasta file
+    fas_id : str, optional
+        id of the concatenated sequence
+    fas_descr : str, optional
+        description of the fasta sequence
+    """
+    if type(path_to) == str:
+        cat_seq = _cat_fasta_records(path_to)
+    elif type(path_to) == list:
+        cat_seq = ""
+        for file in path_to:
+            cat_seq += _cat_fasta_records(file)
+          
+    cat_seq.id = fas_id
+    cat_seq.description = fas_descr
+    SeqIO.write(cat_seq, fas_name, "fasta")        
+ 
 
 
 
