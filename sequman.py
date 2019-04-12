@@ -7,10 +7,13 @@ Created on Thu Mar 21 11:33:22 2019
 import os
 import datetime
 from Bio import SeqIO
-from Bio.Seq import Seq
 from Bio.SeqUtils import GC
 from Bio import Entrez
 from time import sleep, time
+import matplotlib.pyplot as plt
+import seaborn as sns
+from math import log2
+sns.set()
 
 
 def _get_current_time():
@@ -174,9 +177,45 @@ def cat_fasta(path_to, fas_name="cat_seq.fasta", fas_id="cat_seq", fas_descr="")
     SeqIO.write(cat_seq, fas_name, "fasta")        
  
 
-
-
-
+def plot_contigs_cover_gc(path_to):
+    """takes spades assembler output which is fasta
+    file containing contigs, and
+    creates two plots:
+    1. distribution of GC content in contigs
+    2. GC content vs log2 coverage depth 
+    
+    Parameters:
+    -----------
+    path_to : str
+        path to input file
+    """
+    
+    container = []
+    for seq_record in SeqIO.parse(path_to, "fasta"):
+        entry = (seq_record.id, GC(seq_record.seq))
+        container.append(entry)
+    gc = [x[1] for x in container]
+    
+    fig = plt.figure()
+    sns.distplot(gc, hist=False, kde_kws={"shade":True})
+    plt.title("GC_distribution")
+    plt.xlabel("GC content, %")
+    plt.savefig("contigs_GC_distribution.jpeg", format="jpeg")
+    fig.close()
+    
+    coverage = []
+    for el in container:
+        cov = el[0].split("_")[-1]
+        coverage.append(float(cov))
+    cov_log2 = [log2(x) for x in coverage]
+    
+    fig1 = plt.figure(figsize=(10, 8))
+    plt.scatter(gc, cov_log2, s=5)
+    plt.xlabel("GC content, %")
+    plt.ylabel("log2 coverage depth")
+    plt.title("coverage of the contigs vs GC content", fontsize=15)
+    plt.savefig("GC_content_vs_contigs_coverage.jpeg", format="jpeg")
+    fig1.close()
 
 
 
