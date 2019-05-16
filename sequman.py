@@ -9,10 +9,17 @@ import datetime
 from Bio import SeqIO
 from Bio.SeqUtils import GC
 from Bio import Entrez
+from Bio.Blast import NCBIWWW
+from Bio.Blast import NCBIXML
 from time import sleep, time
 import matplotlib.pyplot as plt
 import seaborn as sns
 from math import log2
+from http.client import IncompleteRead
+from socket import gaierror
+from urllib.error import HTTPError
+import pandas as pd
+
 sns.set()
 
 
@@ -68,6 +75,65 @@ def fetch_seq(ids, seq_format="fasta", sep=False):
                 print("a total of %s sequences were downloaded" %count)
     else:
         print("invalid ids parameter type")
+
+
+
+def _fetch_blast_results(record, e_thresh, hits):
+    result_handle = NCBIWWW.qblast("blastn", "nt",  record.seq, hitlist_size=hits)
+    blast_record = NCBIXML.read(result_handle)
+    blast_results_record = []
+    for alignt in  blast_record.alignments:
+        for hsp in alignt.hsps:
+            if hsp.expect < e_thresh:
+                blast_results_record.append([record.id, alignt.title, str(alignt.length), str(hsp.expect)])
+    return blast_results_record
+                
+
+
+def blast_fasta(query, e_thresh=0.1, hits=1):
+    """blast records from a fasta file
+    writes results into the tab-delimited txt file
+    
+    Parameters:
+    -----------
+    query: str
+        path to the input file
+    e_thresh: float
+        e-value blast threshold 
+    hits: int
+        a number of hits to return, 1 by default
+    """
+    fasta = SeqIO.parse(query, "fasta")
+    blast_results_total = []
+    
+    for record in fasta:
+        try:
+            blast_results_record = _fetch_blast_results(record, e_thresh, hits)
+            for res in blast_results_record:
+                blast_results_total.append(res)
+                
+            time_stamp = _get_current_time()
+            print(record.id, " blasted at: ", time_stamp)
+        
+        except IncompleteRead as e: 
+            print("Network problem: ", e, "Second and final attempt is under way...")
+            blast_results_record = _fetch_blast_results(record, e_thresh, hits)
+            for res in blast_results_record:
+                blast_results_total.append(res)
+                
+            time_stamp = _get_current_time()
+            print(record.id, " blasted at: ", time_stamp)
+            
+        except gaierror as e:
+            print("some other problem, 'gaierror': ", e)
+            
+        except HTTPError as e:
+            print("urllib.error.HTTPError: ", e)
+    
+    df = pd.DataFrame(blast_results_total, columns=["record_id", "hit_name", "hit_length", "e_value"])
+    df.to_csv("blast_results.csv", sep="\t")
+    print("job done. the results are in {0}".format(os.path.abspath("blast_results.csv")))
+            
 
 
 def _get_id_length_gc(file):
