@@ -19,7 +19,6 @@ from http.client import IncompleteRead
 from socket import gaierror
 from urllib.error import HTTPError
 import pandas as pd
-
 sns.set()
 
 
