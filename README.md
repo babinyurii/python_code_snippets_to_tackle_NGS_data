@@ -13,4 +13,4 @@
 ![gc_vs_coverage](plot_examples/GC_content_vs_contigs_coverage.jpeg)
 
 
-`blast_fasta()` blasts sequences from fasta file using nucleotide blast. Saves results as tab-delimited text file
+`blast_fasta()` blasts sequences from fasta file using nucleotide blas and saves results as a tab-delimited text file
