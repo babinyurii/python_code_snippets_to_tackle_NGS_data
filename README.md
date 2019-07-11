@@ -14,3 +14,5 @@
 
 
 `blast_fasta()` blasts sequences from fasta file using nucleotide blas and saves results as a tab-delimited text file
+
+`fastq_info()` prints out information about fastq files: total number of reads in a file and number of unique reads ids
