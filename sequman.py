@@ -11,6 +11,7 @@ from Bio.SeqUtils import GC
 from Bio import Entrez
 from Bio.Blast import NCBIWWW
 from Bio.Blast import NCBIXML
+from Bio.SeqIO.QualityIO import FastqGeneralIterator
 from time import sleep, time
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -183,6 +184,55 @@ def fasta_info(path_to=False):
             if f.rsplit(".", 1)[-1] in fasta_extensions:
                 num_records, ids_len_and_gc = _get_id_length_gc(f)
                 _show_fasta_info(f, num_records, ids_len_and_gc)
+
+def _get_fastq_num_records(path_to):
+    with open(path_to) as in_handle:
+        total_reads = 0
+        reads_ids = []
+        for title, seq, qual in FastqGeneralIterator(in_handle):
+            total_reads += 1
+            reads_ids.append(title.split(" ")[0])
+        num_uniq_reads = len(set(reads_ids))
+        
+    return total_reads, num_uniq_reads
+
+
+def _show_fastq_info(f, total_reads, num_uniq_reads):
+    print("file {0} contains:".format(f))
+    print("{0} total reads".format(total_reads))
+    print("{0} unique reads ids".format(num_uniq_reads))
+    print("--------------------------")
+    
+    
+
+def fastq_info(path_to=False):
+    """prints out information about fastq files:
+    number of sequences in the file, 
+    and number of unique ids in the file
+
+    without arguments takes as an input
+    all fastq files in the current dir
+    
+    Parameters
+    ----------
+    path_to_fasta : str or list
+        path to input file, or list of paths
+    """
+    
+    if type(path_to) == str:
+        total_reads, num_uniq_reads = _get_fastq_num_records(path_to)
+        _show_fastq_info(path_to, total_reads, num_uniq_reads)
+        
+    elif type(path_to) == list:
+        for path in path_to:
+            total_reads, num_uniq_reads = _get_fastq_num_records(path)
+            _show_fastq_info(path, total_reads, num_uniq_reads)  
+    else:
+        current_dir_content = os.listdir()
+        for f in current_dir_content:
+            if f.rsplit(".", 1)[-1] == "fastq":
+                total_reads, num_uniq_reads = _get_fastq_num_records(f)
+                _show_fastq_info(f, total_reads, num_uniq_reads)  
 
 
 def split_fasta(path_to, path_out=False):
