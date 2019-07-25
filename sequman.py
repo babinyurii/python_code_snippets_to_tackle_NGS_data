@@ -12,6 +12,7 @@ from Bio import Entrez
 from Bio.Blast import NCBIWWW
 from Bio.Blast import NCBIXML
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
+import vcf
 from time import sleep, time
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -337,16 +338,145 @@ def plot_contigs_cover_gc(path_to):
 
 
 
+def count_indels(vcf_file, min_depth=10, verbose="True"):
+    """counts indels in vcf file
+    ----------------
+    vcf_file: str
+        input vcf
+    min_depth: int
+        minimum depth in favour of indel, 10 by default
+    verbose: bool
+        True - prints information about the variants
+        False - keeps silent
+    """
+
+    vcf_reader = vcf.Reader(open(vcf_file, 'r'))
+    counter = 0
+
+    if verbose:
+        for record in vcf_reader:
+            if "INDEL" not in record.INFO.keys():
+                continue
+            elif record.INFO["DP4"][2] + record.INFO["DP4"][3] < min_depth:
+                continue
+            else:
+                print("chromosome: %s, position: %s, ref: %s, indel variant: %s" \
+                     % (record.CHROM, record.POS, record.REF, record.ALT ))
+                print("depth at position: %s" % record.INFO["DP"])
+                print("reads supporting reference: %d" %(record.INFO["DP4"][0] + record.INFO["DP4"][1]))
+                print("reads supporting indel variant: %d" %(record.INFO["DP4"][2] + record.INFO["DP4"][3]))
+                print("==========================================================================")
+                counter += 1
+    else:
+        for record in vcf_reader:
+            if "INDEL" not in record.INFO.keys():
+                continue
+            elif record.INFO["DP4"][2] + record.INFO["DP4"][3] < min_depth:
+                continue
+            else:
+                counter += 1
+    
+    print("total number of indels %s" %counter)
+    return 0
+
+
+
+def count_snps(vcf_file, min_depth=10, verbose="True"):
+    """counts SNPs in vcf file
+    ----------------
+    vcf_file: str
+        input vcf
+    min_depth: int
+        minimum depth in favour of SNPs, 10 by default
+    verbose: bool
+        True - prints information about the variants
+        False - keeps silent
+    """
+
+    vcf_reader = vcf.Reader(open(vcf_file, 'r'))
+    counter = 0
+
+    if verbose:
+        for record in vcf_reader:
+            if "INDEL" in record.INFO.keys():
+                continue
+            elif record.INFO["DP4"][2] + record.INFO["DP4"][3] < min_depth:
+                continue
+            else:
+                print("chromosome: %s, position: %s, ref: %s, snp variant: %s" \
+                     % (record.CHROM, record.POS, record.REF, record.ALT ))
+                print("depth at position: %s" % record.INFO["DP"])
+                print("reads supporting reference: %d" %(record.INFO["DP4"][0] + record.INFO["DP4"][1]))
+                print("reads supporting snp variant: %d" %(record.INFO["DP4"][2] + record.INFO["DP4"][3]))
+                print("==========================================================================")
+                counter += 1
+    else:
+        for record in vcf_reader:
+            if "INDEL" in record.INFO.keys():
+                continue
+            elif record.INFO["DP4"][2] + record.INFO["DP4"][3] < min_depth:
+                continue
+            else:
+                counter += 1
+    
+    print("total number of SNPs %s" %counter)
+    return 0
 
 
 
 
+def vcf_to_df(vcf_file, min_depth=10, var_type="snp"):
+    """creates pandas dataframe from the vcf file data
+    ----------------
+    vcf_file: str
+        input vcf
+    min_depth: int
+        minimum depth in favour of variant, 10 by default
+    var_type: str
+        snp - prints information about the variants
+        indel - keeps silent
+    """
 
+    vcf_reader = vcf.Reader(open(vcf_file, 'r'))
+    
+    vcf_data ={"chrom": [], "pos": [], "ref": [], "var": [], "total_depth": [],
+              "depth_ref": [], "depth_var": []}
+    
+    if var_type == "snp":
+        for record in vcf_reader:
+            if "INDEL" in record.INFO.keys():
+                continue
+            elif record.INFO["DP4"][2] + record.INFO["DP4"][3] < min_depth:
+                continue
+            else:
+                vcf_data["chrom"].append(record.CHROM)
+                vcf_data["pos"].append(record.POS)
+                vcf_data["ref"].append(record.REF)
+                vcf_data["var"].append(record.ALT)
+                vcf_data["total_depth"].append(record.INFO["DP"])
+                vcf_data["depth_ref"].append(record.INFO["DP4"][0] + record.INFO["DP4"][1])
+                vcf_data["depth_var"].append(record.INFO["DP4"][2] + record.INFO["DP4"][3])
+    
+    elif var_type == "indel":
+        for record in vcf_reader:
+            if "INDEL" not in record.INFO.keys():
+                continue
+            elif record.INFO["DP4"][2] + record.INFO["DP4"][3] < min_depth:
+                continue
+            else:
+                vcf_data["chrom"].append(record.CHROM)
+                vcf_data["pos"].append(record.POS)
+                vcf_data["ref"].append(record.REF)
+                vcf_data["var"].append(record.ALT)
+                vcf_data["total_depth"].append(record.INFO["DP"])
+                vcf_data["depth_ref"].append(record.INFO["DP4"][0] + record.INFO["DP4"][1])
+                vcf_data["depth_var"].append(record.INFO["DP4"][2] + record.INFO["DP4"][3])
+    else:
+        print("var_type arg not valid")
 
-
-
-
-
+    df = pd.DataFrame.from_dict(vcf_data)
+    
+    return df
 
 
 
