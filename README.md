@@ -1,3 +1,9 @@
+`count_snp()` counts SNPs in a vcf file with given coverage depth
+
+`count_indels()` counts indels in a vcf file with given coverage depth
+
+`vcf_to_df()` converts pandas dataframe using vcf file data
+
 `fetch_seq()` downloads sequences in fasta or genbank format from NCBI nucleotide database
 
 `fasta_info()` prints out information about fasta sequences: number of records within a file, their length and GC content
