@@ -4,7 +4,7 @@
 
 `split_fasta()` splits fasta file containing multiple records into the corresponding number of fasta files
 
-`cat_fasta()` concatenates sequece records from one multifasta file or several files into one sequence and writes it as fasta
+`cat_fasta()` concatenates sequences from one multifasta file or several files into one sequence and writes it as fasta
 
 `plot_contigs_cover_gc()` takes SPAdes assembler output (fasta file containing contigs) and creates two plots: GC distribution and GC content vs contigs coverage:
 
@@ -14,3 +14,5 @@
 
 
 `blast_fasta()` blasts sequences from fasta file using nucleotide blas and saves results as a tab-delimited text file
+
+`fastq_info()` prints out information about fastq files: total number of reads in a file and number of unique reads ids
