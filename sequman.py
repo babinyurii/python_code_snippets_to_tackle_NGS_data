@@ -12,6 +12,9 @@ from Bio import Entrez
 from Bio.Blast import NCBIWWW
 from Bio.Blast import NCBIXML
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
+from Bio.SeqIO.FastaIO import SimpleFastaParser  # low level fast fasta parser
+from Bio.SeqRecord import SeqRecord
+from Bio.Seq import Seq
 import vcf
 from time import sleep, time
 import matplotlib.pyplot as plt
@@ -377,7 +380,7 @@ def count_indels(vcf_file, min_depth=10, verbose="True"):
                 counter += 1
     
     print("total number of indels %s" %counter)
-    return 0
+    
 
 
 
@@ -420,7 +423,7 @@ def count_snps(vcf_file, min_depth=10, verbose="True"):
                 counter += 1
     
     print("total number of SNPs %s" %counter)
-    return 0
+    
 
 
 
@@ -479,14 +482,75 @@ def vcf_to_df(vcf_file, min_depth=10, var_type="snp"):
     return df
 
 
+def _get_ref_seq(input_file):
+    """extracts first record from fasta
+    which must be a reference
+    """
+    # low level parser returns tuple of id and sequence
+    with open("./" + input_file) as in_handle:
+        for title, seq in SimpleFastaParser(in_handle):
+            ref_seq = seq
+            #ref_seq_id = title
+            break
+        
+    return ref_seq
 
 
 
-      
+
+def _get_input_files():
+    valid_extansions = ["fasta", "fas", "fa"]
+    input_files = os.listdir("./")
+    input_files = [f for f in input_files if f.rsplit(".", 1)[-1] in valid_extansions]
+    
+    return input_files
+
+
+def _fill_gaps_from_ref(f, ref_seq, record_container):
+    with open(f) as in_handle:
+        for title, seq in SimpleFastaParser(in_handle):
+            new_seq = ""
+            index_counter = 0
+            
+            for char in seq:
+                if char == "-":
+                    try:
+                        new_seq += ref_seq[index_counter]
+                    except IndexError:
+                        new_seq += char
+                else:
+                    new_seq += char
+                index_counter += 1
+            record_container.append(SeqRecord(Seq(new_seq), id=title,
+                                              description=""))
+    return record_container
+
+
+def fill_gaps():
+    # to start from command line use: python -c "from sequman import fill_gaps; fill_gaps()"
+    input_files = _get_input_files()
+    print("job started...")
+    for f in input_files:
+        ref_seq = _get_ref_seq(f)
+        record_container = []
+        try:
+            record_container = _fill_gaps_from_ref(f, ref_seq, record_container)
+        except Exception as e:
+            print("error while handling a file: {0}. Error message: {1}".format(f, e))
+        
+        # here goes writing into a file
+        SeqIO.write(record_container, f.rsplit(".",1)[0] + "_gaps_filled.fasta", "fasta")
+        print("file {0} done".format(f))
+    print("...job done")
+
+
+
+    
+
         
         
         
-        
+
         
         
         
