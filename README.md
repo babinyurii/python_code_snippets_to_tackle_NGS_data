@@ -2,7 +2,7 @@
 
 `count_indels()` counts indels in a vcf file with given coverage depth
 
-`vcf_to_df()` converts pandas dataframe using vcf file data
+`vcf_to_df()` creates pandas dataframe using vcf file data
 
 `fetch_seq()` downloads sequences in fasta or genbank format from NCBI nucleotide database
 
