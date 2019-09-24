@@ -32,10 +32,21 @@ def _get_current_time():
         time()).strftime('%Y-%m-%d %H:%M:%S')
     return time_stamp
 
+
+def _format_time_stamp(time_stamp):
+    days, day_time = time_stamp.split(" ")
+    day_time = day_time.split(":")
+    day_time = "_".join(day_time)
+    time_stamp = days + "_time-" + day_time
+    
+    return time_stamp
+
+
 def _load_from_genbank(f_obj, seq_id, rettype):
     handle = Entrez.efetch(db="nucleotide", id=seq_id, rettype=rettype, retmode="text")
     fetched = handle.read()
     f_obj.write(fetched)
+
 
 
 def fetch_seq(ids, seq_format="fasta", sep=False):
@@ -67,10 +78,7 @@ def fetch_seq(ids, seq_format="fasta", sep=False):
             print("a total of %s sequences were downloaded" %count)
         else:
             time_stamp = _get_current_time()
-            days, day_time = time_stamp.split(" ")
-            day_time = day_time.split(":")
-            day_time = "_".join(day_time)
-            time_stamp = days + "_time-" + day_time
+            time_stamp = _format_time_stamp(time_stamp)
             with open("downloaded_bunch_" + time_stamp + "." + seq_format, "w") as f_obj:
                 for i in ids:
                     _load_from_genbank(f_obj, i, seq_format)
@@ -269,9 +277,9 @@ def _cat_fasta_records(file):
     return cat_seq
 
 
-def cat_fasta(path_to, fas_name="cat_seq.fasta", fas_id="cat_seq", fas_descr=""):
-    """concatenates fasta sequences into one 
-    long sequence, takes one multifasta 
+def cat_fasta_seq(path_to, fas_name="cat_seq.fasta", fas_id="cat_seq", fas_descr=""):
+    """concatenates  sequences from fasta files
+    into one long sequence. takes one multifasta 
     or several fasta files as an input
     Parameters:
     ----------
@@ -545,7 +553,80 @@ def fill_gaps():
 
 
 
+
+def _collect_fasta_records(in_fastas):
     
+    record_container = []
+    for f in in_fastas:
+        with open(f) as in_handle:
+            for title, seq in SimpleFastaParser(in_handle):
+                record_container.append(SeqRecord(Seq(seq), id=title, description=""))
+                
+    return record_container
+
+
+
+def append_fastas(in_fastas=False, out_name="appended_fasta_records_"):
+    """appends all records from fasta files into a single fasta file
+    ----------------
+    in_fastas: list or tuple
+        input fasta files
+    out_name: str
+        name for output fasta file
+    """
+    
+    valid_extensions = ["fasta", "fas", "fa"]
+    
+    if in_fastas:
+       record_container = _collect_fasta_records(in_fastas)
+        
+    else:
+        in_fastas = os.listdir("./")
+        in_fastas = [f for f in in_fastas if f.rsplit(".", 1)[-1] in valid_extensions]
+        record_container = _collect_fasta_records(in_fastas)
+
+    time_stamp = _get_current_time()
+    time_stamp = _format_time_stamp(time_stamp)
+    
+    SeqIO.write(record_container, out_name + time_stamp + ".fasta", "fasta")  
+    
+        
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         
         
