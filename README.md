@@ -20,4 +20,6 @@ functions for routine work with sequence data:
 
 `vcf_to_df()` creates pandas dataframe from the vcf file data
 
-`append_fastas()` appends all records from input fasta files into a single fasta file
+`merge_fasta()` puts all records from input fasta files into a single fasta file
+
+`cat_by_id()` concatenates sequences by their id from separate fasta files into a single sequence. outputs fasta with concatenated sequences
