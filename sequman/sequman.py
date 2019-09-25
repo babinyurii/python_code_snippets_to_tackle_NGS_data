@@ -566,8 +566,8 @@ def _collect_fasta_records(in_fastas):
 
 
 
-def append_fastas(in_fastas=False, out_name="appended_fasta_records_"):
-    """appends all records from fasta files into a single fasta file
+def merge_fasta(in_fastas=False, out_name="appended_fasta_records_"):
+    """puts all records from fasta files into a single fasta file
     ----------------
     in_fastas: list or tuple
         input fasta files
@@ -590,14 +590,66 @@ def append_fastas(in_fastas=False, out_name="appended_fasta_records_"):
     
     SeqIO.write(record_container, out_name + time_stamp + ".fasta", "fasta")  
     
+
+
+
+def _get_intersected_ids(in_fastas):
+          
+    ids_container = []
+    for f in in_fastas:
+        id_set = set()
+        with open(f) as in_handle:
+            for title, seq in SimpleFastaParser(in_handle):
+                id_set.add(title)
+            ids_container.append(id_set)
+    
+    intersected_ids = list(set.intersection(*ids_container))    
+    
+    return intersected_ids
         
 
-        
 
-
-
-
-
+def cat_by_id(in_fastas=False, out_name="cat_by_id_"):
+    """
+    cats sequences by their ids from separate fasta files 
+    into one sequence and outputs a single file
+    ----------------
+    in_fastas: list or tuple
+        input fasta files
+    out_name: str
+        name for output fasta file
+    ----------------    
+    NOTE: files must start with number like this : '1_', 
+    to denote the order of concatenation
+    """
+    valid_extensions = ["fasta", "fas", "fa"]
+    
+    
+    if in_fastas:
+        intersected_ids = _get_intersected_ids(in_fastas)
+    else:
+        in_fastas = os.listdir("./")
+        in_fastas = [f for f in in_fastas if f.rsplit(".", 1)[-1] in valid_extensions]
+        intersected_ids = _get_intersected_ids(in_fastas)
+    
+    intersected_ids.sort() # to sort record by their number, which goes first
+    intersected_records = []
+    for seq_id in intersected_ids:
+        cat_seq = ""
+        for f in in_fastas:
+            with open(f) as in_handle:
+                for title, seq in SimpleFastaParser(in_handle):
+                    if title == seq_id:
+                        cat_seq += seq
+                        break
+        intersected_records.append(SeqRecord(Seq(cat_seq), 
+                                                 id=title, 
+                                                 description=""))
+    
+    time_stamp = _get_current_time()
+    time_stamp = _format_time_stamp(time_stamp)
+    
+    SeqIO.write(intersected_records, out_name + time_stamp + ".fasta", "fasta")    
 
 
 
