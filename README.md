@@ -1,4 +1,4 @@
-functions for routine work with sequence data:
+#### a bunch of Python functions for routine work with sequence data:
 
 `fetch_seq()` downloads sequences from nucleotide database by id nums and saves them in genbank format
 
