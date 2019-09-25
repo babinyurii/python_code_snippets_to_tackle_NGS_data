@@ -10,16 +10,16 @@
 
 `split_fasta()` splits fasta file containing several sequences into the corresponding number of fasta files
 
-`cat_fasta_seq()` oncatenates  sequences from fasta files into one long sequence. takes one multifasta  or several fasta files as an input
+`cat_fasta_seq()` concatenates  sequences from fasta files into one long sequence. takes one multifasta  or several fasta files as an input
 
-`plot_contigs_cover_gc()`takes spades assembler output which is fasta file containing contigs, and creates two plots:  distribution of GC content in contigs, and GC content vs log2 coverage depth 
+`plot_contigs_cover_gc()`takes spades assembler output which is a fasta file containing contigs, and creates two plots:  distribution of GC content in contigs, and GC content vs log2 coverage depth 
 
-`count_indels()` counts indels in a vcf file
+`count_indels()` counts indels in a vcf file with given coverage depth
 
-`count_snps()` counts SNPs in a vcf file
+`count_snps()` counts SNPs in a vcf file with given coverage depth
 
 `vcf_to_df()` creates pandas dataframe from the vcf file data
 
 `merge_fasta()` puts all records from input fasta files into a single fasta file
 
-`cat_by_id()` concatenates sequences by their id from separate fasta files into a single sequence. outputs fasta with concatenated sequences
+`cat_by_id()` concatenates sequences by their ids from separate fasta files into a single sequence. outputs fasta file. 
