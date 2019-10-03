@@ -62,7 +62,8 @@ def fetch_seq(ids, seq_format="fasta", sep=False):
         False - download bunch of sequences as one file
         True - donwload bunch of sequences as separate files
     """
-    Entrez.email = "babin.yurii@gmail.com"
+    # your email in here
+    Entrez.email = ""
     count = 0
     if type(ids) == str:
         with open("downloaded_" + ids + "." + seq_format, "w") as f_obj:
