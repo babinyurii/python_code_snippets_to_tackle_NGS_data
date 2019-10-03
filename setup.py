@@ -13,7 +13,7 @@ setup(
   author = 'Yuriy Babin',                  
   author_email = 'babin.yurii@gmail.com',      
   url = 'https://github.com/babinyurii/sequman', 
-  download_url = 'https://github.com/babinyurii/sequman/archive/v_0.0.1.tar.gz',
+  download_url = 'https://github.com/babinyurii/sequman/archive/v_0.0.2.tar.gz',
   keywords = ['bioinformatics', 'sequencing'],   
   install_requires=[            
           'pandas',
