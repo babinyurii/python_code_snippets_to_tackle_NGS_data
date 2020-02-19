@@ -654,9 +654,32 @@ def cat_by_id(in_fastas=False, out_name="cat_by_id_"):
 
 
 
-
-
-
+def u_to_t(in_fasta, out_name="changed_u_to_t"):
+    """
+    replaces U to T in fasta sequences
+    saves fasta file
+    ----------------
+    in_fasta: input fasta files
+    out_name: str
+        name for output fasta file
+    ----------------    
+    """
+    seq_collection = []
+    
+    with open(in_fasta) as in_handle:
+            for title, seq in SimpleFastaParser(in_handle):
+                new_seq = ""
+                for char in seq:
+                    if char == "U":
+                        new_seq += "T"
+                    else:
+                        new_seq += char
+                
+                seq_collection.append(SeqRecord(Seq(new_seq), id=title, description=""))
+                
+                
+    SeqIO.write(seq_collection, "out_name", "fasta")  
+    
 
 
 
