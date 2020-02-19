@@ -23,3 +23,5 @@
 `merge_fasta()` puts all records from input fasta files into a single fasta file
 
 `cat_by_id()` concatenates sequences by their ids from separate fasta files into a single sequence. outputs fasta file. 
+
+`u_to_t()` replaces all Us to Ts in fasta file
